@@ -857,26 +857,4 @@ updateProgressBar();
 </script>
 
 </body>
-</html> ) {
-  const storedCooldown = localStorage.getItem('viewCooldown');
-  if (storedCooldown) {
-    viewCooldown = parseInt(storedCooldown);
-  }
-}
-
-function isViewLocked() {
-  const now = new Date().getTime();
-  return viewCooldown && viewCooldown > now;
-}
-
-function updateCoinTimer() {
-  const now = new Date().getTime();
-  const timerElement = document.getElementById('coin-timer');
-  const unlockTime = viewCooldown;
-
-  if (unlockTime && unlockTime > now) {
-    const remainingTime = unlockTime - now;
-    const hours = Math.floor(remainingTime / (1000 * 60 * 60));
-    const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
-    timerElement.textContent = `Availab
+</html>
