@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Score Counter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  body {
+    font-family: 'Roboto', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #333;
+    perspective: 1000px;
+  }
+  #header {
+    color: white;
+    text-align: center;
+    font-size: 50px;
+    font-weight: bold;
+    width: 200%;
+    padding: 20px 0;
+    margin-bottom: 20px;
+    margin-top: 0px;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px #ff4500, 0 0 20px #ff4500, 0 0 30px #ff4500, 0 0 40px #ff4500, 0 0 50px #ff4500, 0 0 60px #ff4500, 0 0 70px #ff4500;
+  }
+  #menu {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 30px;
+  }
+  .menu-item {
+    cursor: pointer;
+    padding: 10px 20px;
+    background-color: #FFA500;
+    color: white;
+    border-radius: 5px;
+    font-size: 18px;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+  .menu-item:hover {
+    background-color: #FF8C00;
+    transform: scale(1.1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  }
+  #score-container {
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 32px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+    transition: color 0.3s, font-size 0.3s, text-shadow 0.3s;
+  }
+  #circle {
+    width: 270px;
+    height: 270px;
+    background-color: #D7AF00;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s;
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
+    transform-style: preserve-3d;
+  }
+  #circle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300px;
+    height: 300px;
+    background-color: #D7AF00;
+    border-radius: 50%;
+    transform: translate(-50%, -50%) translateZ(-30px);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+  }
+  #circle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 280px;
+    height: 280px;
+    background-color: #D7AF00;
+    border-radius: 50%;
+    transform: translate(-50%, -50%) translateZ(-60px);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+  }
+  #circle p {
+    color: #FF8C00;
+    font-size: 120px;
+    font-weight: bold;
+    margin: 0;
+    position: relative;
+    transform: translateZ(20px);
+    text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+  }
+  .score-popup {
+    position: absolute;
+    font-size: 24px;
+    font-weight: bold;
+    color: orange;
+    animation: fireEffect 1s forwards, fadeout 1s forwards;
+  }
+  .score-animation {
+    position: absolute;
+    font-size: 24px;
+    font-weight: bold;
+    color: orange;
+    transform: translateY(0);
+    animation: scoreMoveUp 1s forwards;
+  }
+  @keyframes fadeout {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  @keyframes fireEffect {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-20px) scale(1.5); color: red; }
+    100% { transform: translateY(-40px) scale(2); color: red; }
+  }
+  @keyframes scaryEffect {
+    0% { transform: scale(1) rotate(0); }
+    50% { transform: scale(1.2) rotate(10deg); color: red; text-shadow: 5px 5px 5px black; }
+    100% { transform: scale(1) rotate(0); }
+  }
+  @keyframes scoreMoveUp {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-100px); opacity: 0; }
+  }
+  #fuel-container {
+    text-align: center;
+    font-size: 18px;
+    display: flex;
+    flex-direction: column;
+    color: white;
+    align-items: center;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  #progress-bar-container {
+    width: 390px;
+    height: 22px;
+    border: 1px solid black;
+    border-radius: 15px;
+    margin-top: 30px;
+    position: relative;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+  #progress-bar {
+    height: 100%;
+    width: 100%;
+    background-color: #CC6600;
+    transition: width 0.3s;
+  }
+  #boost-options {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+  }
+  .boost-option {
+    cursor: pointer;
+    padding: 10px 20px;
+    background-color: #32CD32;
+    color: white;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin: 5px 0;
+    transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    position: relative;
+  }
+  .boost-option:hover {
+    background-color: #228B22;
+    transform: scale(1.1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  }
+  .boost-option.locked {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  .timer {
+    font-size: 14px;
+    color: white;
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  #modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    }
+    #modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 600px;
+    text-align: center;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+  #close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+  }
+  #close:hover,
+  #close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  #boost-page {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    text-align: center;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.5s forwards;
+  }
+  #boost-page h1 {
+    color: white;
+    font-size: 36px;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+  }
+  #boost-page .boost-option {
+    font-size: 24px;
+    background-color: #ff6347;
+    border-radius: 10px;
+    padding: 20px 30px;
+    margin: 20px;
+    transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    position: relative;
+  }
+  #boost-page .boost-option:hover {
+    background-color: #e5533b;
+    transform: scale(1.1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.7);
+  }
+  #boost-page .boost-option.locked {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  #boost-page .timer {
+    font-size: 18px;
+    color: white;
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes fadeOut {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  #boost-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    color: white;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-weight: bold;
+    transition: color 0.3s;
+  }
+  #boost-close:hover {
+    color: red;
+  }
+  #coin-modal {
+    display: none;
+    position: fixed;
+    z-index: 2;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    text-align: center;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.5s forwards;
+  }
+  #coin-modal h1 {
+    color: white;
+    font-size: 36px;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+  }
+  #coin-modal .coin-option {
+    font-size: 24px;
+    background-color: blue;
+    color: white;
+    border-radius: 10px;
+    padding: 20px 30px;
+    margin: 20px;
+    transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    position: relative;
+    cursor: pointer;
+  }
+  #coin-modal .coin-option.locked {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  #coin-modal .coin-option:hover:not(.locked) {
+    background-color: #1e90ff;
+    transform: scale(1.1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.7);
+  }
+  #coin-modal .timer {
+    font-size: 18px;
+    color: white;
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  #coin-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    color: white;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-weight: bold;
+    transition: color 0.3s;
+  }
+  #coin-close:hover {
+    color: red;
+  }
+  #coin-timer {
+    font-size: 18px;
+    color: white;
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  #code-input-container {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+  }
+  #code-input {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+  }
+  #submit-code {
+    padding: 10px 20px;
+    background-color: #FFA500;
+    color: white;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+  #submit-code:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  #submit-code:hover:not(:disabled) {
+    background-color: #FF8C00;
+    transform: scale(1.1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  }
+</style>
+</head>
+<body>
+
+<div id="header">Tap and Earn</div>
+
+<div id="menu">
+  <div class="menu-item" onclick="openCoinModal()">coin☄️</div>
+  <div class="menu-item" onclick="openBoostPage()">boost🚀</div>
+  <div class="menu-item" onclick="showModal()">ref🌐</div>
+</div>
+
+<div id="score-container">🪙 0</div>
+<div id="circle" ontouchstart="increaseScore(event)">
+  <p>🦊</p>
+</div>
+<div id="fuel-container">
+  <div id="progress-bar-container">
+    <div id="progress-bar"></div>
+  </div>
+  Fuel: <span id="fuel">5000</span>
+</div>
+
+<div id="boost-options">
+  <div class="boost-option" id="boost-option-full" onclick="fullEnergyAndReturn()">full energy🛢
+    <div class="timer" id="timer-full"></div>
+  </div>
+  <div class="boost-option" id="boost-option-boost" onclick="boostTabAndReturn()">boost tab🏎
+    <div class="timer" id="timer-boost"></div>
+  </div>
+  <div class="boost-option" id="boost-option-upgrade" onclick="upgradeTabAndReturn()">upgrade tab🗽
+    <div class="timer" id="timer-upgrade"></div>
+  </div>
+</div>
+
+<div id="boost-page" class="boost-page">
+  <h1>Boost Options</h1>
+  <button id="boost-close" onclick="closeBoostPage()">&times;</button>
+  <div class="boost-option" id="boost-page-full" onclick="fullEnergyAndReturn()">full energy🛢
+    <div class="timer" id="boost-timer-full"></div>
+  </div>
+  <div class="boost-option" id="boost-page-boost" onclick="boostTabAndReturn()">boost tab🏎
+    <div class="timer" id="boost-timer-boost"></div>
+  </div>
+  <div class="boost-option" id="boost-page-upgrade" onclick="upgradeTabAndReturn()">upgrade tab🗽
+    <div class="timer" id="boost-timer-upgrade"></div>
+  </div>
+</div>
+
+<div id="modal">
+  <div id="modal-content">
+  <span id="close" onclick="closeModal()">&times;</span>
+    <p>Follow me on social media: <strong>@mammad8rd</strong></p>
+  </div>
+</div>
+
+<div id="coin-modal">
+  <h1>Look and Earn</h1>
+  <button id="coin-close" onclick="closeCoinModal()">&times;</button>
+  <div class="coin-option" id="coin-view" onclick="openViewLink()">view</div>
+  <p style="color: white; margin-top: 20px;">1000💰</p>
+  <p style="color: white;">To open the (submit) option, you must watch the video for at least 3 minutes and find the secret code in the video and place it in the designated place. 😉</p>
+  <div id="coin-timer"></div>
+  <div id="code-input-container">
+    <input type="text" id="code-input" placeholder="Enter code">
+    <button id="submit-code" onclick="submitCode()">Submit</button>
+  </div>
+</div>
+
+<audio id="click-sound" src="click.mp3"></audio>
+<audio id="score-sound" src="score.mp3"></audio>
+
+<script>
+let score = 0;
+let fuel = 5000;
+let intervalId = null;
+let scaryEffectTimeout = null;
+let boostActive = false;
+let boostCooldown = {
+  fullEnergy: null,
+  boostTab: null,
+  upgradeTab: null
+};
+let viewCooldown = null;
+let submitCooldown = null;
+
+document.addEventListener('DOMContentLoaded', (event) => {
+  if (localStorage.getItem('score')) {
+    score = parseInt(localStorage.getItem('score'));
+    document.getElementById('score-container').textContent = `🪙 ${score}`;
+  }
+  if (localStorage.getItem('fuel')) {
+    fuel = parseInt(localStorage.getItem('fuel'));
+    document.getElementById('fuel').textContent = fuel;
+    updateProgressBar();
+  }
+  loadBoostCooldowns();
+  updateBoostOptions();
+  setInterval(updateBoostOptions, 1000); // Update the boost options every second
+
+  // Load view and submit cooldowns
+  loadViewCooldown();
+  loadSubmitCooldown();
+  updateSubmitButton();
+  updateCoinTimer();
+  setInterval(updateSubmitButton, 1000); // Update the submit button every second
+  setInterval(updateCoinTimer, 1000); // Update the coin timer every second
+});
+
+function increaseScore(event) {
+  const clickSound = document.getElementById('click-sound');
+  const scoreSound = document.getElementById('score-sound');
+  const touches = event.touches;
+
+  for (let i = 0; i < touches.length; i++) {
+    if (fuel > 0) {
+      let increment = 1;
+      if (boostActive) {
+        increment *= 2;
+      }
+      if (score >= 1000 && score < 10000) {
+        increment *= 2;
+      } else if (score >= 10000 && score < 100000) {
+        increment *= 3;
+        activateScaryEffect();
+      } else if (score >= 100000 && score < 1000000) {
+        increment *= 4;
+        activateScaryEffect();
+      } else if (score >= 1000000 && score < 10000000) {
+        increment *= 5;
+        activateScaryEffect();
+      } else if (score >= 10000000) {
+        increment *= 6;
+        activateScaryEffect();
+      }
+      score += increment;
+      fuel--;
+      document.getElementById('score-container').textContent = `🪙 ${score}`;
+      document.getElementById('fuel').textContent = fuel;
+      updateProgressBar();
+      showScorePopup(touches[i], increment);
+      showScoreAnimation(touches[i], increment);
+      tiltCircle(touches[i]);
+      clickSound.play();
+      scoreSound.play();
+      localStorage.setItem('score', score);
+      localStorage.setItem('fuel', fuel);
+      if (fuel === 0) {
+        startFuelIncrease();
+      }
+    }
+  }
+  event.preventDefault(); // Prevent default behavior to allow multi-touch
+}
+
+function activateScaryEffect() {
+  clearTimeout(scaryEffectTimeout);
+  document.getElementById('score-container').style.animation = 'scaryEffect 0.8s infinite';
+  scaryEffectTimeout = setTimeout(() => {
+    document.getElementById('score-container').style.animation = '';
+  }, 700);
+}
+
+function showScorePopup(touch, increment) {
+  const circle = document.getElementById('circle');
+  const scorePopup = document.createElement('div');
+  scorePopup.className = 'score-popup';
+  scorePopup.textContent = `+${increment}`;
+  scorePopup.style.left = `${touch.clientX - circle.offsetLeft - 10}px`;
+  scorePopup.style.top = `${touch.clientY - circle.offsetTop - 30}px`;
+  circle.appendChild(scorePopup);
+  setTimeout(() => {
+    circle.removeChild(scorePopup);
+  }, 1000);
+}
+
+function showScoreAnimation(touch, increment) {
+  const circle = document.getElementById('circle');
+  const scoreAnimation = document.createElement('div');
+  scoreAnimation.className = 'score-animation';
+  scoreAnimation.textContent = `+${increment}`;
+  scoreAnimation.style.left = `${touch.clientX - circle.offsetLeft}px`;
+  scoreAnimation.style.top = `${touch.clientY - circle.offsetTop}px`;
+  circle.appendChild(scoreAnimation);
+  setTimeout(() => {
+    circle.removeChild(scoreAnimation);
+  }, 1000);
+}
+
+function tiltCircle(touch) {
+  const circle = document.getElementById('circle');
+  const rect = circle.getBoundingClientRect();
+  const x = touch.clientX - rect.left - rect.width / 2;
+  const y = touch.clientY - rect.top - rect.height / 2;
+  const angleX = y / rect.height * 30;
+  const angleY = -x / rect.width * 30;
+  circle.style.transform = `rotateX(${angleX}deg) rotateY(${angleY}deg)`;
+  setTimeout(() => {
+    circle.style.transform = `rotateX(0deg) rotateY(0deg)`;
+  }, 300);
+}
+
+function startFuelIncrease() {
+  if (!intervalId) {
+    intervalId = setInterval(() => {
+      if (fuel < 5000) {
+        fuel++;
+        document.getElementById('fuel').textContent = fuel;
+        updateProgressBar();
+        localStorage.setItem('fuel', fuel);
+      } else {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    }, 1000);
+  }
+}
+
+function updateProgressBar() {
+  const progressBar = document.getElementById('progress-bar');
+  progressBar.style.width = `${(fuel / 5000) * 100}%`;
+}
+
+function goToMain() {
+  document.getElementById('boost-options').style.display = 'none';
+}
+
+function openBoostOptions() {
+  document.getElementById('boost-options').style.display = 'flex';
+}
+
+function openBoostPage() {
+  const boostPage = document.getElementById('boost-page');
+  boostPage.style.display = 'flex';
+  boostPage.style.animation = 'fadeIn 0.5s';
+}
+
+function closeBoostPage() {
+  const boostPage = document.getElementById('boost-page');
+  boostPage.style.animation = 'fadeOut 0.5s';
+  setTimeout(() => {
+    boostPage.style.display = 'none';
+  }, 500);
+}
+
+function showModal() {
+  document.getElementById('modal').style.display = 'block';
+}
+
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+}
+
+function fullEnergy() {
+  fuel = 5000;
+  document.getElementById('fuel').textContent = fuel;
+  updateProgressBar();
+  localStorage.setItem('fuel', fuel);
+  setBoostCooldown('fullEnergy');
+}
+
+function boostTab() {
+  boostActive = true;
+  setTimeout(() => {
+    boostActive = false;
+  }, 10000); // Boost lasts for 10 seconds
+  setBoostCooldown('boostTab');
+}
+
+function upgradeTab() {
+  // Implement the upgrade tab functionality
+  setBoostCooldown('upgradeTab');
+}
+
+function fullEnergyAndReturn() {
+  if (!isBoostLocked('fullEnergy')) {
+    fullEnergy();
+    closeBoostPage();
+  }
+}
+
+function boostTabAndReturn() {
+  if (!isBoostLocked('boostTab')) {
+    boostTab();
+    closeBoostPage();
+  }
+}
+
+function upgradeTabAndReturn() {
+  if (!isBoostLocked('upgradeTab')) {
+    upgradeTab();
+    closeBoostPage();
+  }
+}
+
+function setBoostCooldown(boostType) {
+  const now = new Date().getTime();
+  const unlockTime = now + 12 * 60 * 60 * 1000; // 12 hours
+  boostCooldown[boostType] = unlockTime;
+  localStorage.setItem('boostCooldown', JSON.stringify(boostCooldown));
+}
+
+function loadBoostCooldowns() {
+  const storedCooldowns = localStorage.getItem('boostCooldown');
+  if (storedCooldowns) {
+    boostCooldown = JSON.parse(storedCooldowns);
+  }
+}
+
+function isBoostLocked(boostType) {
+  const now = new Date().getTime();
+  return boostCooldown[boostType] && boostCooldown[boostType] > now;
+}
+
+function updateBoostOptions() {
+  const now = new Date().getTime();
+  updateBoostOption('boost-option-full', 'timer-full', 'fullEnergy', now);
+  updateBoostOption('boost-option-boost', 'timer-boost', 'boostTab', now);
+  updateBoostOption('boost-option-upgrade', 'timer-upgrade', 'upgradeTab', now);
+
+  updateBoostOption('boost-page-full', 'boost-timer-full', 'fullEnergy', now);
+  updateBoostOption('boost-page-boost', 'boost-timer-boost', 'boostTab', now);
+  updateBoostOption('boost-page-upgrade', 'boost-timer-upgrade', 'upgradeTab', now);
+}
+
+function updateBoostOption(elementId, timerId, boostType, now) {
+  const optionElement = document.getElementById(elementId);
+  const timerElement = document.getElementById(timerId);
+  const unlockTime = boostCooldown[boostType];
+
+  if (unlockTime && unlockTime > now) {
+    optionElement.classList.add('locked');
+    const remainingTime = unlockTime - now;
+    const hours = Math.floor(remainingTime / (1000 * 60 * 60));
+    const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+    timerElement.textContent = `${hours}h ${minutes}m ${seconds}s`;
+  } else {
+    optionElement.classList.remove('locked');
+    timerElement.textContent = '';
+  }
+}
+
+// Functions for coin modal
+function openCoinModal() {
+  document.getElementById('coin-modal').style.display = 'flex';
+}
+
+function closeCoinModal() {
+  document.getElementById('coin-modal').style.display = 'none';
+}
+
+function openViewLink() {
+  window.open('https://youtube.com/shorts/k69wVkRLEvY?si=bWNpBcHJXbN7eXID', '_blank');
+  setTimeout(showCodeInput, 180000); // Show code input after 3 minutes
+}
+
+function showCodeInput() {
+  document.getElementById('code-input-container').style.display = 'flex';
+}
+
+function submitCode() {
+  const codeInput = document.getElementById('code-input');
+  if (codeInput.value === '258369') {
+    score += 1000;
+    document.getElementById('score-container').textContent = `🪙 ${score}`;
+    localStorage.setItem('score', score);
+    setSubmitCooldown();
+    codeInput.value = ''; // Clear input field
+  }
+}
+
+function setSubmitCooldown() {
+  const now = new Date().getTime();
+  const unlockTime = now + 12 * 60 * 60 * 1000; // 12 hours
+  submitCooldown = unlockTime;
+  localStorage.setItem('submitCooldown', submitCooldown);
+  updateSubmitButton();
+}
+
+function loadSubmitCooldown() {
+  const storedCooldown = localStorage.getItem('submitCooldown');
+  if (storedCooldown) {
+    submitCooldown = parseInt(storedCooldown);
+  }
+}
+
+function updateSubmitButton() {
+  const now = new Date().getTime();
+  const submitButton = document.getElementById('submit-code');
+  const unlockTime = submitCooldown;
+
+  if (unlockTime && unlockTime > now) {
+    submitButton.disabled = true;
+    const remainingTime = unlockTime - now;
+    const hours = Math.floor(remainingTime / (1000 * 60 * 60));
+    const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+    submitButton.textContent = `Submit (${hours}h ${minutes}m ${seconds}s)`;
+  } else {
+    submitButton.disabled = false;
+    submitButton.textContent = 'Submit';
+  }
+}
+
+function loadViewCooldown() {
+  const storedCooldown = localStorage.getItem('viewCooldown');
+  if (storedCooldown) {
+    viewCooldown = parseInt(storedCooldown);
+  }
+}
+
+function isViewLocked() {
+  const now = new Date().getTime();
+  return viewCooldown && viewCooldown > now;
+}
+
+function updateCoinTimer() {
+  const now = new Date().getTime();
+  const timerElement = document.getElementById('coin-timer');
+  const unlockTime = viewCooldown;
+
+  if (unlockTime && unlockTime > now) {
+    const remainingTime = unlockTime - now;
+    const hours = Math.floor(remainingTime / (1000 * 60 * 60));
+    const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+    timerElement.textContent = `Available in ${hours}h ${minutes}m ${seconds}s`;
+  } else {
+    timerElement.textContent = '';
+  }
+}
+
+document.getElementById('fuel').textContent = fuel;
+document.getElementById('score-container').textContent = `🪙 ${score}`;
+updateProgressBar();
+</script>
+
+</body>
+</html> 
